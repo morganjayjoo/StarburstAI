@@ -600,3 +600,89 @@
         <div class="faq-q">What is bytes32 symbol hash?</div>
         <div class="faq-a">Therminos identifies symbols by keccak256(symbol). So "BTC" becomes a 32-byte hash. The contract stores and returns these hashes; the UI shows a short hex or a label if you've configured symbol_map in CocoaCEV/Kika and synced it (future feature).</div>
       </div>
+      <div class="faq-item">
+        <div class="faq-q">How often does the dashboard refresh?</div>
+        <div class="faq-a">When connected to a contract, StarburstAI auto-refreshes every 25 seconds. You can also click Refresh at any time. In demo mode there is no auto-refresh.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Which contract ABI is used?</div>
+        <div class="faq-a">The script uses a minimal ABI with getRegisteredSymbols, getHeatSummary, getBandStats, getThresholds, getConfigSnapshot, and platformPaused. This matches the Therminos contract interface. If the contract is upgraded with new functions, the dashboard can be updated to call them.</div>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <h2>Troubleshooting</h2>
+      <div class="faq-item">
+        <div class="faq-q">"Failed to load contract" — what to check</div>
+        <div class="faq-a">Ensure (1) your wallet is on the same network as the contract, (2) the address is the correct Therminos deployment (not a different contract), (3) your RPC is responsive. Try refreshing the page and reconnecting.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Heat table shows "No thermometers"</div>
+        <div class="faq-a">The contract has no registered thermometers yet. Use CocoaCEV or Kika (as owner) to call registerThermometer(symbolHash, windowBlocks) for each asset you want to track. Then use the updater to report prices.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Risk score is 0 or all bands are cold</div>
+        <div class="faq-a">Either there are no price reports yet, or the reported prices are very stable so volatility is below the cold threshold. Report more data points over time so volatility can be computed.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Contract address is lost after closing the tab</div>
+        <div class="faq-a">We save the contract address to localStorage when you change it or click Refresh. If it still doesn't persist, check that the browser allows localStorage for this site.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">MetaMask or wallet not appearing</div>
+        <div class="faq-a">Install the wallet extension and refresh the page. Ensure the site is not blocked by the wallet. Try a different browser if the issue continues.</div>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <h2>References</h2>
+      <ul class="quick-ref-list">
+        <li>Therminos: on-chain temperature checker contract (Solidity). Tracks price and volatility, assigns bands.</li>
+        <li>CocoaCEV: Python CLI for Therminos. Commands: summary, risk-score, snapshot-save/load, volatility-rank, band-timeline, health, report-from-file, simulate, diff-exports, chain-presets.</li>
+        <li>Kika: Python CLI for Therminos. Commands: summary, band-stats, symbol, list, thresholds, config, report, batch-report, history, band-history, hottest, coldest, watch, export, status, can-report, thermometer, slots, dashboard, export-csv, alerts, price-at, compare, report-float, info.</li>
+        <li>StarburstAI: this web dashboard. Read-only. Connect wallet, paste Therminos address, view heat summary and config.</li>
+      </ul>
+    </div>
+
+    <div class="list-card">
+      <h2>Quick start (step by step)</h2>
+      <p class="section-subtitle">Get from zero to a live heat dashboard in a few steps.</p>
+      <div class="meta-row"><span>Step 1.</span><span>Install a Web3 wallet (e.g. MetaMask) in your browser and create or import an account.</span></div>
+      <div class="meta-row"><span>Step 2.</span><span>Deploy the Therminos contract (or use an existing deployment). Note the contract address.</span></div>
+      <div class="meta-row"><span>Step 3.</span><span>If you are the contract owner: register thermometers via CocoaCEV or Kika (registerThermometer(symbolHash, windowBlocks)).</span></div>
+      <div class="meta-row"><span>Step 4.</span><span>If you are the updater: report prices using CocoaCEV or Kika (report or batch-report). Prices are in E8 format.</span></div>
+      <div class="meta-row"><span>Step 5.</span><span>Open StarburstAI, click Connect, and approve the wallet connection. Paste the Therminos contract address in the header input.</span></div>
+      <div class="meta-row"><span>Step 6.</span><span>The dashboard will load heat summary, band counts, and risk score. Use the Config tab to verify owner, treasury, and thresholds.</span></div>
+      <div class="meta-row"><span>Step 7.</span><span>Click Refresh to update data, or wait for the automatic 25-second refresh. Use the FAQ and other tabs for more detail.</span></div>
+    </div>
+
+    <div class="list-card">
+      <h2>Contract methods used by StarburstAI</h2>
+      <p class="section-subtitle">Read-only calls; no transactions are sent from this UI.</p>
+      <table class="heat-table data-table-compact">
+        <thead><tr><th>Method</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">getHeatSummary()</td><td>Returns symbol hashes, bands, volatilities (E8), prices (E8) for all thermometers.</td></tr>
+          <tr><td class="mono">getBandStats()</td><td>Returns counts for cold, mild, warm, hot, critical.</td></tr>
+          <tr><td class="mono">getConfigSnapshot()</td><td>Returns owner, treasury, guardian, updater, deploy block, threshold BPS, report fee, max history length, paused.</td></tr>
+          <tr><td class="mono">getThresholds()</td><td>Returns coldBps, mildBps, warmBps, hotBps (optional; config snapshot includes these).</td></tr>
+          <tr><td class="mono">getRegisteredSymbols()</td><td>Returns array of bytes32 symbol hashes (optional; heat summary already includes symbols).</td></tr>
+          <tr><td class="mono">platformPaused()</td><td>Returns whether the contract is paused (optional; config snapshot includes paused).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-placeholder" id="trendPlaceholder">Trend chart: connect contract and refresh to see volatility trend (placeholder).</div>
+
+    <div class="list-card">
+      <h2>Disclaimer</h2>
+      <p class="about-block">StarburstAI is a read-only dashboard for educational and informational use. It displays on-chain data from the Therminos contract and does not provide investment, legal, or financial advice. Cryptocurrency and on-chain instruments involve risk. You are solely responsible for your own research and decisions. The authors and operators of StarburstAI are not liable for any loss or damage arising from use of this dashboard or reliance on the data displayed. Always verify contract addresses and data on-chain. Not financial advice.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Changelog</h2>
+      <div class="changelog-item"><span class="changelog-date">v1.0.0</span><span class="version-num">StarburstAI</span> — Initial release. Heat summary table, risk score gauge, band distribution stats, contract config tab. Connect wallet and Therminos address; demo mode with sample data. Auto-refresh every 25s when connected. LocalStorage for contract address. CocoaCEV & Kika integration notes, FAQ, glossary, troubleshooting, security & privacy, data source flow.</div>
+      <div class="changelog-item"><span class="changelog-date">Therminos</span> On-chain temperature checker: register thermometers, report prices (updater), volatility bands cold→critical, configurable thresholds, guardian pause, treasury.</div>
+      <div class="changelog-item"><span class="changelog-date">CocoaCEV</span> CLI: risk-score, snapshot-save/load, volatility-rank, band-timeline, health, report-from-file, simulate, diff-exports, chain-presets. Config: cocoa_cev_config.json, COCOACEV_* env.</div>
+      <div class="changelog-item"><span class="changelog-date">Kika</span> CLI: summary, band-stats, symbol, list, thresholds, config, report, batch-report, history, band-history, hottest, coldest, watch, export, status, can-report, thermometer, slots, dashboard, export-csv, alerts, price-at, compare, report-float, info.</div>
+    </div>

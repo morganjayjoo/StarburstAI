@@ -1030,3 +1030,89 @@
       }
 
       async function connect() {
+        try {
+          if (!window.ethereum) { showMessage('No Web3 wallet found. Install MetaMask or another wallet.', 'error'); return; }
+          provider = new ethers.BrowserProvider(window.ethereum);
+          const network = await provider.getNetwork();
+          networkBarEl.textContent = 'Network: ' + (network.name || network.chainId.toString());
+          signer = await provider.getSigner();
+          const addr = await signer.getAddress();
+          walletAddrEl.textContent = addr.slice(0, 6) + '…' + addr.slice(-4);
+          btnConnect.style.display = 'none';
+          btnDisconnect.style.display = 'inline-block';
+          updateStatusDot();
+          await loadContract();
+        } catch (e) {
+          console.error(e);
+          showMessage('Connection failed: ' + (e.message || e), 'error');
+          updateStatusDot();
+        }
+      }
+
+      function disconnect() {
+        provider = null;
+        signer = null;
+        contract = null;
+        demoMode = true;
+        walletAddrEl.textContent = 'Not connected';
+        networkBarEl.textContent = 'Network: —';
+        btnConnect.style.display = 'inline-block';
+        btnDisconnect.style.display = 'none';
+        updateStatusDot();
+        loadDemoData();
+      }
+
+      function saveContractAddress(addr) {
+        try {
+          if (addr) localStorage.setItem(CONTRACT_STORAGE_KEY, addr);
+          else localStorage.removeItem(CONTRACT_STORAGE_KEY);
+        } catch (e) {}
+      }
+      function loadContractAddress() {
+        try {
+          var a = localStorage.getItem(CONTRACT_STORAGE_KEY);
+          if (a && contractAddrEl) contractAddrEl.value = a;
+        } catch (e) {}
+      }
+
+      function startAutoRefresh() {
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(function () {
+          if (contract && signer) loadContract();
+        }, REFRESH_INTERVAL_MS);
+      }
+      function stopAutoRefresh() {
+        if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+      }
+
+      btnConnect.addEventListener('click', connect);
+      btnDisconnect.addEventListener('click', function () { stopAutoRefresh(); disconnect(); });
+      btnRefresh.addEventListener('click', function () {
+        if (contract && signer) { saveContractAddress(contractAddrEl.value.trim()); loadContract(); }
+        else loadDemoData();
+      });
+      if (contractAddrEl) {
+        contractAddrEl.addEventListener('change', function () { saveContractAddress(this.value.trim()); });
+        contractAddrEl.addEventListener('blur', function () { saveContractAddress(this.value.trim()); });
+      }
+      loadContractAddress();
+
+      document.querySelectorAll('.tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          const t = this.getAttribute('data-tab');
+          document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+          document.querySelectorAll('.tab-content').forEach(function (x) { x.classList.remove('active'); });
+          this.classList.add('active');
+          const content = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+          if (content) content.classList.add('active');
+        });
+      });
+
+      function renderBandTimelineDemo() {
+        var el = document.getElementById('bandTimelineDemo');
+        if (!el) return;
+        var chars = ['C', 'm', 'w', 'h', 'x'];
+        var seq = [];
+        for (var i = 0; i < 12; i++) seq.push(chars[Math.floor(Math.random() * chars.length)]);
+        el.innerHTML = seq.map(function (c) {
+          var cls = c === 'C' ? 'c' : c === 'm' ? 'm' : c === 'w' ? 'w' : c === 'h' ? 'h' : 'x';

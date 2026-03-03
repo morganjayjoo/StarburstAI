@@ -686,3 +686,89 @@
       <div class="changelog-item"><span class="changelog-date">CocoaCEV</span> CLI: risk-score, snapshot-save/load, volatility-rank, band-timeline, health, report-from-file, simulate, diff-exports, chain-presets. Config: cocoa_cev_config.json, COCOACEV_* env.</div>
       <div class="changelog-item"><span class="changelog-date">Kika</span> CLI: summary, band-stats, symbol, list, thresholds, config, report, batch-report, history, band-history, hottest, coldest, watch, export, status, can-report, thermometer, slots, dashboard, export-csv, alerts, price-at, compare, report-float, info.</div>
     </div>
+
+    <div class="list-card">
+      <h2>Appendix: Band formula</h2>
+      <p class="about-block">Therminos computes volatility over a sliding window of price reports. For each pair of consecutive prices in the window, the absolute percentage change in basis points is computed. The volatility measure (e.g. average of those changes, or similar) is then compared to the four threshold BPS values (cold, mild, warm, hot). If volatility ≤ coldBps then band = cold (0). If volatility ≤ mildBps then band = mild (1). If volatility ≤ warmBps then band = warm (2). If volatility ≤ hotBps then band = hot (3). Otherwise band = critical (4). The exact formula is in the Therminos contract (Solidity).</p>
+    </div>
+    <div class="list-card">
+      <h2>Appendix: E8 conversion</h2>
+      <p class="about-block">Prices and volatility are stored in E8 (1e8 = 100,000,000). To convert price E8 to a human number: divide by 1e8. Example: 4500000000000 / 1e8 = 45,000. To convert volatility E8 to basis points: (volE8 * 10000) / 1e8. Example: 150000000 (E8) → 15 bps. To convert a human price to E8: multiply by 1e8 and round. Example: 45,000.25 → 4500025000000.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Glossary of terms</h2>
+      <dl class="glossary">
+        <dt>Thermometer</dt>
+        <dd>A registered slot in Therminos for one symbol (bytes32 hash). It has a window (in blocks), price history, and current band and volatility.</dd>
+        <dt>Band</dt>
+        <dd>An integer 0–4: cold (0), mild (1), warm (2), hot (3), critical (4). Derived from volatility vs threshold BPS.</dd>
+        <dt>Volatility (E8)</dt>
+        <dd>Fixed-point measure of price movement over the thermometer's window, in 1e8 units. Convert to bps with (volE8 * 10000) / 1e8.</dd>
+        <dt>BPS (basis points)</dt>
+        <dd>1 bps = 0.01%. Used for thresholds and volatility display.</dd>
+        <dt>E8</dt>
+        <dd>Fixed-point scale 10^8. Price E8 = price * 1e8; volatility E8 is similar.</dd>
+        <dt>Symbol hash</dt>
+        <dd>bytes32 = keccak256(symbol). Therminos uses hashes to identify assets.</dd>
+        <dt>Updater</dt>
+        <dd>Contract role allowed to call reportPrice and batchReportPrices.</dd>
+        <dt>Guardian</dt>
+        <dd>Contract role that can pause the platform and halt individual thermometers.</dd>
+        <dt>Risk score</dt>
+        <dd>In StarburstAI: (sum of band weights) / (number of thermometers), where cold=0, mild=25, warm=50, hot=75, critical=100. Result 0–100.</dd>
+        <dt>Demo mode</dt>
+        <dd>When no wallet is connected or no contract address is set, the dashboard shows sample thermometers and bands.</dd>
+        <dt>CocoaCEV</dt>
+        <dd>Python CLI for Therminos; upgraded from Kika with risk-score, snapshots, simulate, chain presets, etc.</dd>
+        <dt>Kika</dt>
+        <dd>Python CLI for Therminos; summary, report, export, watch, and many view commands.</dd>
+        <dt>StarburstAI</dt>
+        <dd>This web dashboard. Read-only UI for Therminos heat summary and config.</dd>
+      </dl>
+    </div>
+
+    <div class="list-card">
+      <h2>Browser support</h2>
+      <p class="about-block">StarburstAI works in any modern browser that supports JavaScript, localStorage, and Web3 (via an injected provider such as MetaMask). Recommended: Chrome, Firefox, Edge, or Brave with a Web3 wallet extension. The page uses ethers.js v6 for contract reads. No server-side rendering is required; the app runs entirely in the client.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Credits & stack</h2>
+      <p class="section-subtitle">Technologies and concepts used in StarburstAI.</p>
+      <ul class="quick-ref-list">
+        <li>ethers.js v6 — Web3 provider and contract interface.</li>
+        <li>Therminos — Solidity contract for price/volatility temperature bands.</li>
+        <li>CocoaCEV — Python CLI (risk-score, snapshots, simulate, chain presets).</li>
+        <li>Kika — Python CLI (summary, report, export, watch, dashboard).</li>
+        <li>Outfit — Google Font used for headings and body.</li>
+        <li>JetBrains Mono — Monospace font for addresses and numbers.</li>
+        <li>StarburstAI — Single-page read-only dashboard; no backend.</li>
+      </ul>
+    </div>
+
+    <div class="list-card">
+      <h2>Example workflow (owner + updater)</h2>
+      <p class="section-subtitle">Typical flow from deployment to a live dashboard.</p>
+      <div class="meta-row"><span>1.</span><span>Deploy Therminos contract. Constructor sets treasury, guardian, updater (e.g. your address).</span></div>
+      <div class="meta-row"><span>2.</span><span>As owner: call registerThermometer(keccak256("BTC"), 100) to add a thermometer with a 100-block window.</span></div>
+      <div class="meta-row"><span>3.</span><span>Repeat for other symbols (ETH, etc.) with desired window sizes (e.g. 12–40320 blocks).</span></div>
+      <div class="meta-row"><span>4.</span><span>As updater: use CocoaCEV or Kika to report prices. Example: report-float BTC 45000.5 (sends price in E8).</span></div>
+      <div class="meta-row"><span>5.</span><span>Contract appends price to history and recomputes volatility and band for each thermometer.</span></div>
+      <div class="meta-row"><span>6.</span><span>Open StarburstAI, connect wallet, paste contract address. Dashboard shows heat summary and risk score.</span></div>
+      <div class="meta-row"><span>7.</span><span>Keep reporting prices periodically (e.g. from an oracle or script). Bands and risk score update as volatility changes.</span></div>
+    </div>
+
+    <div class="list-card">
+      <h2>Summary</h2>
+      <p class="about-block">StarburstAI is a single-page web dashboard that reads from the Therminos smart contract. Therminos tracks crypto price and volatility and assigns each registered symbol a heat band from cold to critical. StarburstAI displays the heat summary table, band distribution, and an aggregate risk score (0–100). You connect your Web3 wallet and paste the Therminos contract address; the app then fetches getHeatSummary, getBandStats, and getConfigSnapshot. If no contract is set, demo mode shows sample data. CocoaCEV and Kika are companion CLI tools for registering thermometers, reporting prices, exporting data, and running risk scores or simulations. Together they form a full stack for on-chain temperature checking. Not financial advice.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Feature checklist</h2>
+      <ul class="quick-ref-list">
+        <li>Connect Web3 wallet (MetaMask, etc.)</li>
+        <li>Paste and persist Therminos contract address</li>
+        <li>Load heat summary (symbol hashes, bands, volatilities, prices)</li>
+        <li>Display risk score 0–100 from band weights</li>
+        <li>Display band distribution (cold, mild, warm, hot, critical counts)</li>

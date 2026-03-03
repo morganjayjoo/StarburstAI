@@ -428,3 +428,89 @@
     </div>
     <div id="tabHowto" class="tab-content">
       <div class="list-card">
+        <h2>How to use</h2>
+        <div class="meta-row"><span>1.</span><span>Click Connect and approve your Web3 wallet (e.g. MetaMask).</span></div>
+        <div class="meta-row"><span>2.</span><span>Paste your deployed Therminos contract address in the input field.</span></div>
+        <div class="meta-row"><span>3.</span><span>The dashboard loads heat summary, band counts, and risk score. Click Refresh to update.</span></div>
+        <div class="meta-row"><span>4.</span><span>Use the Config tab to see contract parameters (owner, treasury, thresholds, etc.).</span></div>
+        <div class="meta-row"><span>5.</span><span>To feed data: use CocoaCEV or Kika to register thermometers and report prices as the updater.</span></div>
+      </div>
+    </div>
+    <div id="tabGlossary" class="tab-content">
+      <div class="list-card">
+        <h2>Bands glossary</h2>
+        <dl class="glossary">
+          <dt>Cold</dt>
+          <dd>Low volatility; price moves are small relative to the threshold. Band 0.</dd>
+          <dt>Mild</dt>
+          <dd>Moderate volatility; above cold threshold but still calm. Band 1.</dd>
+          <dt>Warm</dt>
+          <dd>Elevated volatility; noticeable price swings. Band 2.</dd>
+          <dt>Hot</dt>
+          <dd>High volatility; large moves. Band 3.</dd>
+          <dt>Critical</dt>
+          <dd>Very high volatility; extreme moves. Band 4.</dd>
+        </dl>
+        <p class="about-block">Thresholds (in basis points) are set on the contract (cold BPS, mild BPS, warm BPS, hot BPS). Volatility is computed from price changes over the thermometer's window and mapped to these bands.</p>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <h2>Data explained</h2>
+      <p class="about-block"><strong>Volatility (bps)</strong> is derived from price changes in the thermometer's window: each change in basis points is averaged (or similar) and the result is compared to the contract's band thresholds.</p>
+      <p class="about-block"><strong>Price (E8)</strong> is the latest reported price in 1e8 units (e.g. 4500000000000 = 45,000). Thermometers store history; the dashboard shows current price and band.</p>
+      <p class="about-block"><strong>Risk score</strong> is (sum of band weights) / (number of thermometers), where cold=0, mild=25, warm=50, hot=75, critical=100. It gives a single number for "how hot" the whole set is.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>CocoaCEV & Kika</h2>
+      <p class="about-block">StarburstAI reads from the same Therminos contract that the CocoaCEV and Kika CLI tools use. CocoaCEV is an upgraded CLI with risk scoring, snapshots, volatility rank, health checks, report-from-file, and chain presets. Kika is the original CLI for heat summary, reporting prices, and exporting data. Use CocoaCEV or Kika to:</p>
+      <ul class="intro-list">
+        <li>Register thermometers (symbol hash + window blocks)</li>
+        <li>Report prices as the updater (single or batch)</li>
+        <li>Export heat summary to JSON or CSV</li>
+        <li>Save and load snapshots for comparison</li>
+        <li>Run offline simulation of bands from price series</li>
+      </ul>
+      <p class="about-block">Configure <code>contract_address</code> and <code>rpc_url</code> (or use chain presets like mainnet, sepolia) in CocoaCEV/Kika config, then run commands such as <code>summary</code>, <code>risk-score</code>, <code>report</code>, <code>export</code>.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Band timeline (demo)</h2>
+      <p class="section-subtitle">Example band sequence over time: C=cold, m=mild, w=warm, h=hot, x=critical (oldest left, newest right).</p>
+      <div class="band-timeline" id="bandTimelineDemo">C m m w w h h x w m C</div>
+    </div>
+
+    <div class="list-card two-col">
+      <div>
+        <h2>Keyboard & actions</h2>
+        <div class="meta-row"><span class="keyboard-kbd">Connect</span><span>Click Connect or use wallet extension</span></div>
+        <div class="meta-row"><span class="keyboard-kbd">Refresh</span><span>Reload heat summary and config from contract</span></div>
+        <div class="meta-row"><span>Contract</span><span>Paste Therminos address and data loads on next refresh</span></div>
+      </div>
+      <div>
+        <h2>Quick reference</h2>
+        <ul class="quick-ref-list">
+          <li>Therminos: on-chain temperature checker contract</li>
+          <li>CocoaCEV: CLI with risk-score, snapshots, simulate</li>
+          <li>Kika: CLI for summary, report, export</li>
+          <li>Band: cold &lt; mild &lt; warm &lt; hot &lt; critical</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <h2>FAQ (continued)</h2>
+      <div class="faq-item">
+        <div class="faq-q">Why do I see symbol hashes instead of names?</div>
+        <div class="faq-a">Therminos stores symbols as bytes32 hashes (e.g. keccak256("BTC")). The dashboard shows a short hex prefix. CocoaCEV and Kika support a symbol_map in config to map hashes to labels like "BTC" or "ETH"; a future version of StarburstAI could allow the same.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What are the default threshold BPS values?</div>
+        <div class="faq-a">Typical defaults on Therminos are cold 500, mild 1500, warm 3500, hot 7000 (all in basis points). The contract owner can change them via setThresholds. The Config tab shows current values.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I report prices from the website?</div>
+        <div class="faq-a">StarburstAI is read-only. To report prices you need to be the contract's updater and use CocoaCEV or Kika with a private key (report or report-from-file commands).</div>
+      </div>
+      <div class="faq-item">

@@ -772,3 +772,89 @@
         <li>Load heat summary (symbol hashes, bands, volatilities, prices)</li>
         <li>Display risk score 0–100 from band weights</li>
         <li>Display band distribution (cold, mild, warm, hot, critical counts)</li>
+        <li>Config tab: owner, treasury, guardian, updater, thresholds, fee, paused</li>
+        <li>Demo mode when not connected or no contract</li>
+        <li>Auto-refresh every 25 seconds when connected</li>
+        <li>Manual Refresh button</li>
+        <li>Status indicator (connected / demo / disconnected)</li>
+        <li>FAQ, About, How to use, Bands glossary, Data explained</li>
+        <li>CocoaCEV & Kika integration section</li>
+        <li>Band timeline demo (C/m/w/h/x)</li>
+        <li>Therminos at a glance tiles</li>
+        <li>Threshold reference table</li>
+        <li>Security & privacy, Troubleshooting, References</li>
+        <li>Quick start, Contract methods table, Changelog</li>
+        <li>Disclaimer, Appendix (band formula, E8), Glossary of terms</li>
+        <li>Browser support, Credits, Example workflow, Summary</li>
+      </ul>
+    </div>
+
+    <div class="list-card">
+      <h2>Links (inline)</h2>
+      <p class="section-subtitle">Use the tabs above to jump to Config, FAQ, About, How to use, or Bands glossary. Use Refresh in the header or footer to reload contract data.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Version</h2>
+      <p class="about-block">StarburstAI v1.0.0. Single-file HTML with embedded CSS and JavaScript. Compatible with Therminos contract (getHeatSummary, getBandStats, getConfigSnapshot). For updates to the contract or CocoaCEV/Kika, refer to their respective documentation.</p>
+      <div class="divider-soft"></div>
+      <p class="section-note">Minimum 1200 lines of code. Therminos · CocoaCEV · Kika · StarburstAI. Not financial advice.</p>
+      <p class="section-note">Built for the Therminos temperature checker ecosystem. Connect, paste contract, view heat.</p>
+      <p class="section-note">EVM mainnet and testnets supported. Use CocoaCEV chain presets for RPC.</p>
+      <p class="section-note">Read-only dashboard. No transactions from this UI.</p>
+      <p class="section-note">StarburstAI — Therminos heat at a glance.</p>
+    </div>
+
+    <footer>
+      StarburstAI · Therminos heat dashboard · Not financial advice ·
+      <div class="footer-links">
+        <a href="#" onclick="document.getElementById('btnRefresh').click(); return false;">Refresh</a>
+        <a href="#" onclick="document.querySelector('[data-tab=config]').click(); return false;">Config</a>
+        <a href="#" onclick="document.querySelector('[data-tab=faq]').click(); return false;">FAQ</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      // -------------------------------------------------------------------------
+      // StarburstAI — Therminos heat dashboard
+      // Reads getHeatSummary, getBandStats, getConfigSnapshot from Therminos.
+      // Renders risk score (0–100), band distribution, heat table, config.
+      // Supports demo mode when no contract or not connected.
+      // Dependencies: ethers.js v6 (BrowserProvider, Contract).
+      // Storage: localStorage starburstai_therminos_contract (contract address).
+      // Optional: starburstai_symbol_map (JSON hash->label) for symbol names.
+      // Auto-refresh: every 25s when connected to a contract.
+      // -------------------------------------------------------------------------
+      const BAND_NAMES = ['cold', 'mild', 'warm', 'hot', 'critical'];
+      const BAND_WEIGHTS = [0, 25, 50, 75, 100];
+      const E8 = 1e8;
+      const BPS = 1e4;
+
+      const contractAddrEl = document.getElementById('contractAddr');
+      const walletAddrEl = document.getElementById('walletAddr');
+      const networkBarEl = document.getElementById('networkBar');
+      const messageBoxEl = document.getElementById('messageBox');
+      const btnConnect = document.getElementById('btnConnect');
+      const btnDisconnect = document.getElementById('btnDisconnect');
+      const btnRefresh = document.getElementById('btnRefresh');
+      const riskValueEl = document.getElementById('riskValue');
+      const statCountEl = document.getElementById('statCount');
+      const statColdEl = document.getElementById('statCold');
+      const statMildEl = document.getElementById('statMild');
+      const statWarmEl = document.getElementById('statWarm');
+      const statHotEl = document.getElementById('statHot');
+      const statCriticalEl = document.getElementById('statCritical');
+      const heatTableBody = document.getElementById('heatTableBody');
+      const configListEl = document.getElementById('configList');
+      const statusDotEl = document.getElementById('statusDot');
+
+      const THRMINOS_ABI = [
+        'function getRegisteredSymbols() view returns (bytes32[])',
+        'function getHeatSummary() view returns (bytes32[] symbolHashes, uint8[] bands, uint256[] volatilitiesE8, uint256[] pricesE8)',
+        'function getBandStats() view returns (uint256 coldCount, uint256 mildCount, uint256 warmCount, uint256 hotCount, uint256 criticalCount)',
+        'function getThresholds() view returns (uint256 _coldBps, uint256 _mildBps, uint256 _warmBps, uint256 _hotBps)',
+        'function getConfigSnapshot() view returns (address ownerAddr, address treasuryAddr, address guardianAddr, address updaterAddr, uint256 deployBlk, uint256 coldBpsVal, uint256 mildBpsVal, uint256 warmBpsVal, uint256 hotBpsVal, uint256 reportFee, uint256 maxHistLen, bool paused)',
+        'function platformPaused() view returns (bool)',
+      ];

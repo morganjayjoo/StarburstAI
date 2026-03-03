@@ -256,3 +256,89 @@
     .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 0.35rem; }
     .status-dot.connected { background: var(--mild); }
     .status-dot.disconnected { background: var(--text-dim); }
+    .status-dot.demo { background: var(--starburst); }
+    .copy-btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-dim); border-radius: 4px; }
+    .copy-btn:hover { color: var(--starburst); border-color: var(--starburst-dim); }
+    .paused-warn { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--critical); color: var(--critical); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 0.75rem; }
+    .section-note { font-size: 0.8rem; color: var(--text-dim); font-style: italic; margin-top: 0.5rem; }
+    .changelog-item { padding: 0.5rem 0; border-bottom: 1px solid var(--border-soft); font-size: 0.85rem; }
+    .changelog-item:last-child { border-bottom: none; }
+    .changelog-date { color: var(--text-dim); font-size: 0.78rem; margin-right: 0.5rem; }
+    .version-num { font-family: 'JetBrains Mono', monospace; color: var(--starburst); }
+    @media (max-width: 900px) {
+      .thermometer-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    }
+    .heat-table .band-badge.cold { border: 1px solid rgba(59, 130, 246, 0.3); }
+    .heat-table .band-badge.mild { border: 1px solid rgba(34, 197, 94, 0.3); }
+    .heat-table .band-badge.warm { border: 1px solid rgba(234, 179, 8, 0.3); }
+    .heat-table .band-badge.hot { border: 1px solid rgba(249, 115, 22, 0.3); }
+    .heat-table .band-badge.critical { border: 1px solid rgba(239, 68, 68, 0.3); }
+    .risk-gauge-inner .risk-value.cold { color: var(--cold); }
+    .risk-gauge-inner .risk-value.mild { color: var(--mild); }
+    .risk-gauge-inner .risk-value.warm { color: var(--warm); }
+    .risk-gauge-inner .risk-value.hot { color: var(--hot); }
+    .risk-gauge-inner .risk-value.critical { color: var(--critical); }
+    input.contract-in:focus { outline: none; border-color: var(--starburst-dim); box-shadow: 0 0 0 2px var(--starburst-glow); }
+    .btn:focus { outline: none; }
+    .tab:focus { outline: none; }
+    .list-card h2 + .section-subtitle { margin-top: 0.15rem; }
+    .thermometer-tile .band.cold { color: var(--cold); }
+    .thermometer-tile .band.mild { color: var(--mild); }
+    .thermometer-tile .band.warm { color: var(--warm); }
+    .thermometer-tile .band.hot { color: var(--hot); }
+    .thermometer-tile .band.critical { color: var(--critical); }
+    .empty-state code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: var(--text-dim); }
+    .about-block code { font-family: 'JetBrains Mono', monospace; font-size: 0.88em; background: var(--bg-panel); padding: 0.1rem 0.35rem; border-radius: 4px; }
+    @media (prefers-color-scheme: light) {
+      .app { }
+    }
+    @media (max-width: 640px) {
+      .app { padding: 1rem 0.75rem; }
+      .logo { font-size: 1.5rem; }
+      .contract-in { width: 100%; max-width: 100%; }
+      .stats-row { flex-direction: column; }
+      .stat-card { min-width: 100%; }
+      .risk-gauge { width: 130px; height: 130px; }
+      .heat-table th, .heat-table td { padding: 0.5rem 0.75rem; font-size: 0.82rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="logo">StarburstAI</div>
+        <div class="tagline">Crypto price & volatility heat dashboard · Therminos</div>
+      </div>
+      <div class="header-right">
+        <span class="wallet-addr" id="walletAddr">Not connected</span>
+        <input type="text" class="contract-in" id="contractAddr" placeholder="Therminos contract address" />
+        <button type="button" class="btn primary" id="btnConnect">Connect</button>
+        <button type="button" class="btn" id="btnDisconnect" style="display:none;">Disconnect</button>
+      </div>
+    </header>
+
+    <div class="network-bar" id="networkBar"><span class="status-dot disconnected" id="statusDot"></span> Network: —</div>
+    <div class="hero">
+      <h1>Heat at a glance</h1>
+      <p>Monitor crypto price and volatility temperature from Therminos. Cold to critical bands show how much each asset is moving—connect your contract or explore with demo data.</p>
+    </div>
+
+    <div id="messageBox"></div>
+
+    <div class="refresh-row">
+      <span class="section-title">Dashboard</span>
+      <button type="button" class="btn small primary" id="btnRefresh">Refresh</button>
+    </div>
+
+    <div class="risk-card">
+      <h2>Risk score (0–100)</h2>
+      <div class="risk-gauge-wrap">
+        <div class="risk-gauge">
+          <div class="risk-gauge-inner">
+            <span class="risk-value" id="riskValue">—</span>
+            <span class="risk-label">aggregate</span>
+          </div>
+        </div>
+      </div>
+      <div class="risk-legend">

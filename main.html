@@ -944,3 +944,89 @@
           sum += (b >= 0 && b < BAND_WEIGHTS.length) ? BAND_WEIGHTS[b] : 100;
         }
         const score = Math.round(sum / bands.length);
+        riskValueEl.textContent = score;
+      }
+
+      function renderBandStats(cold, mild, warm, hot, critical) {
+        statColdEl.textContent = cold != null ? cold : '—';
+        statMildEl.textContent = mild != null ? mild : '—';
+        statWarmEl.textContent = warm != null ? warm : '—';
+        statHotEl.textContent = hot != null ? hot : '—';
+        statCriticalEl.textContent = critical != null ? critical : '—';
+        const total = (Number(cold) || 0) + (Number(mild) || 0) + (Number(warm) || 0) + (Number(hot) || 0) + (Number(critical) || 0);
+        statCountEl.textContent = total;
+      }
+
+      function renderConfig(config) {
+        if (!config) {
+          configListEl.innerHTML = '<div class="empty-state">No config loaded.</div>';
+          return;
+        }
+        const [ownerAddr, treasuryAddr, guardianAddr, updaterAddr, deployBlk, coldBpsVal, mildBpsVal, warmBpsVal, hotBpsVal, reportFee, maxHistLen, paused] = config;
+        configListEl.innerHTML =
+          '<div class="list-item"><span>Owner</span><span class="mono">' + (ownerAddr || '—') + '</span></div>' +
+          '<div class="list-item"><span>Treasury</span><span class="mono">' + (treasuryAddr || '—') + '</span></div>' +
+          '<div class="list-item"><span>Guardian</span><span class="mono">' + (guardianAddr || '—') + '</span></div>' +
+          '<div class="list-item"><span>Updater</span><span class="mono">' + (updaterAddr || '—') + '</span></div>' +
+          '<div class="list-item"><span>Deploy block</span><span class="mono">' + (deployBlk != null ? deployBlk.toString() : '—') + '</span></div>' +
+          '<div class="list-item"><span>Cold BPS</span><span class="mono">' + (coldBpsVal != null ? coldBpsVal.toString() : '—') + '</span></div>' +
+          '<div class="list-item"><span>Mild BPS</span><span class="mono">' + (mildBpsVal != null ? mildBpsVal.toString() : '—') + '</span></div>' +
+          '<div class="list-item"><span>Warm BPS</span><span class="mono">' + (warmBpsVal != null ? warmBpsVal.toString() : '—') + '</span></div>' +
+          '<div class="list-item"><span>Hot BPS</span><span class="mono">' + (hotBpsVal != null ? hotBpsVal.toString() : '—') + '</span></div>' +
+          '<div class="list-item"><span>Report fee (wei)</span><span class="mono">' + (reportFee != null ? reportFee.toString() : '—') + '</span></div>' +
+          '<div class="list-item"><span>Max history length</span><span class="mono">' + (maxHistLen != null ? maxHistLen.toString() : '—') + '</span></div>' +
+          '<div class="list-item"><span>Paused</span><span class="mono">' + (paused === true ? 'Yes' : paused === false ? 'No' : '—') + '</span></div>';
+      }
+
+      function loadDemoData() {
+        const demoHashes = [
+          '0x' + 'a'.repeat(64).slice(0, 66),
+          '0x' + 'b'.repeat(64).slice(0, 66),
+          '0x' + 'c'.repeat(64).slice(0, 66),
+          '0x' + 'd'.repeat(64).slice(0, 66),
+          '0x' + 'e'.repeat(64).slice(0, 66),
+        ];
+        const demoBands = [0, 1, 2, 3, 4];
+        const demoVols = [200, 1200, 2800, 5500, 9500].map(v => (v * E8) / BPS);
+        const demoPrices = [4500000000000, 230000000000, 1200000000000, 35000000000000, 0.95 * E8];
+        renderHeatTable(demoHashes, demoBands, demoVols, demoPrices);
+        renderRiskScore(demoBands);
+        renderBandStats(1, 1, 1, 1, 1);
+        configListEl.innerHTML = '<div class="empty-state">Demo mode: no contract. Connect and enter a Therminos address for live config.</div>';
+      }
+
+      async function loadContract() {
+        const addr = (contractAddrEl && contractAddrEl.value) ? contractAddrEl.value.trim() : '';
+        if (!addr) {
+          loadDemoData();
+          return;
+        }
+        if (!provider) {
+          loadDemoData();
+          return;
+        }
+        try {
+          contract = new ethers.Contract(addr, THRMINOS_ABI, provider);
+          const [hashes, bands, vols, prices] = await contract.getHeatSummary();
+          const [cold, mild, warm, hot, critical] = await contract.getBandStats();
+          const config = await contract.getConfigSnapshot();
+          renderHeatTable(hashes, bands, vols, prices);
+          renderRiskScore(bands);
+          renderBandStats(cold, mild, warm, hot, critical);
+          renderConfig(config);
+          demoMode = false;
+          clearMessage();
+          startAutoRefresh();
+        } catch (e) {
+          console.error(e);
+          showMessage('Failed to load contract: ' + (e.message || e), 'error');
+          loadDemoData();
+        }
+      }
+
+      function updateStatusDot() {
+        if (!statusDotEl) return;
+        statusDotEl.className = 'status-dot ' + (signer ? (demoMode ? 'demo' : 'connected') : 'disconnected');
+      }
+
+      async function connect() {

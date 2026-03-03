@@ -514,3 +514,89 @@
         <div class="faq-a">StarburstAI is read-only. To report prices you need to be the contract's updater and use CocoaCEV or Kika with a private key (report or report-from-file commands).</div>
       </div>
       <div class="faq-item">
+        <div class="faq-q">What chains are supported?</div>
+        <div class="faq-a">Any EVM chain where Therminos is deployed. Connect your wallet on that network and paste the contract address. CocoaCEV supports chain presets (mainnet, sepolia, polygon, arbitrum, base, optimism) for the RPC URL.</div>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <h2>Therminos at a glance</h2>
+      <p class="section-subtitle">One-line summary of what the contract does and how it fits with CocoaCEV/Kika.</p>
+      <div class="thermometer-grid" id="thermoGrid">
+        <div class="thermometer-tile"><div class="sym">Therminos</div><div class="band">On-chain</div><div class="vol">Stores price snapshots, computes volatility, assigns bands (cold–critical).</div></div>
+        <div class="thermometer-tile"><div class="sym">CocoaCEV</div><div class="band">CLI</div><div class="vol">Risk score, snapshots, volatility rank, health, report-from-file, simulate, chain presets.</div></div>
+        <div class="thermometer-tile"><div class="sym">Kika</div><div class="band">CLI</div><div class="vol">Heat summary, report prices, export JSON/CSV, thresholds, dashboard, watch mode.</div></div>
+        <div class="thermometer-tile"><div class="sym">StarburstAI</div><div class="band">Web</div><div class="vol">Read-only dashboard: heat table, risk gauge, band stats, config. Connect wallet + contract.</div></div>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <h2>Threshold reference</h2>
+      <p class="section-subtitle">Default volatility band boundaries (basis points). Shown in Config when connected.</p>
+      <table class="heat-table data-table-compact">
+        <thead><tr><th>Band</th><th>Typical BPS range</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="band-badge cold">Cold</span></td><td class="mono">0 – 500</td><td>Low volatility</td></tr>
+          <tr><td><span class="band-badge mild">Mild</span></td><td class="mono">500 – 1500</td><td>Moderate</td></tr>
+          <tr><td><span class="band-badge warm">Warm</span></td><td class="mono">1500 – 3500</td><td>Elevated</td></tr>
+          <tr><td><span class="band-badge hot">Hot</span></td><td class="mono">3500 – 7000</td><td>High</td></tr>
+          <tr><td><span class="band-badge critical">Critical</span></td><td class="mono">7000 – 10000</td><td>Very high</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="list-card">
+      <h2>Data source & flow</h2>
+      <p class="about-block">StarburstAI reads only from the Therminos contract. No data is sent to external servers. The flow is:</p>
+      <ol class="intro-list" style="list-style: decimal;">
+        <li>You connect your Web3 wallet (e.g. MetaMask) so the app can use the provider to call the contract.</li>
+        <li>You paste the Therminos contract address. The app stores it in localStorage so it can be restored on next visit.</li>
+        <li>When you click Refresh (or after connecting), the app calls getHeatSummary(), getBandStats(), and getConfigSnapshot() on the contract.</li>
+        <li>From getHeatSummary() we get symbol hashes, bands, volatilities (E8), and prices (E8). We render the heat table and compute the aggregate risk score.</li>
+        <li>From getBandStats() we get counts per band (cold, mild, warm, hot, critical) and display them in the stat cards.</li>
+        <li>From getConfigSnapshot() we show owner, treasury, guardian, updater, deploy block, threshold BPS values, report fee, max history length, and paused flag.</li>
+      </ol>
+      <p class="about-block">If no contract address is set or the contract is not deployed, the app runs in demo mode with sample thermometers and bands so you can see the layout.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Supported networks</h2>
+      <p class="section-subtitle">Therminos can be deployed on any EVM chain. Connect your wallet on the same network as your contract.</p>
+      <ul class="quick-ref-list">
+        <li>Ethereum mainnet</li>
+        <li>Sepolia testnet</li>
+        <li>Polygon</li>
+        <li>Arbitrum One</li>
+        <li>Base</li>
+        <li>Optimism</li>
+        <li>Other EVM-compatible chains</li>
+      </ul>
+      <p class="section-note">CocoaCEV CLI supports chain presets (mainnet, sepolia, polygon, arbitrum, base, optimism) for the RPC URL so you can switch networks easily.</p>
+    </div>
+
+    <div class="list-card">
+      <h2>Security & privacy</h2>
+      <div class="faq-item">
+        <div class="faq-q">Does StarburstAI store my private key or seed?</div>
+        <div class="faq-a">No. The wallet connection uses the standard Web3 API (e.g. MetaMask). Your key never leaves your wallet. StarburstAI only requests read access to the contract; it does not send transactions unless you use a different tool that does.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What is stored in the browser?</div>
+        <div class="faq-a">Only the Therminos contract address in localStorage (key: starburstai_therminos_contract) so we can pre-fill the input on next visit. Optionally you can store a symbol_map in localStorage (starburstai_symbol_map) for hash-to-label mapping; the app will use it if present.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is the contract call data sent anywhere?</div>
+        <div class="faq-a">Contract reads go through your wallet's provider (e.g. MetaMask's RPC). Only that RPC and the contract see the read. StarburstAI does not send the data to any third-party analytics or backend.</div>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <h2>FAQ — Technical</h2>
+      <div class="faq-item">
+        <div class="faq-q">What is E8 format?</div>
+        <div class="faq-a">Price and volatility are stored in fixed-point with 8 decimals. E8 = 10^8. So 4500000000000 means 45,000.0 (45000 * 1e8). Volatility in E8 when multiplied by 10000 (BPS) and divided by 1e8 gives basis points.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What is bytes32 symbol hash?</div>
+        <div class="faq-a">Therminos identifies symbols by keccak256(symbol). So "BTC" becomes a 32-byte hash. The contract stores and returns these hashes; the UI shows a short hex or a label if you've configured symbol_map in CocoaCEV/Kika and synced it (future feature).</div>
+      </div>

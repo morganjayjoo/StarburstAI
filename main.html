@@ -858,3 +858,89 @@
         'function getConfigSnapshot() view returns (address ownerAddr, address treasuryAddr, address guardianAddr, address updaterAddr, uint256 deployBlk, uint256 coldBpsVal, uint256 mildBpsVal, uint256 warmBpsVal, uint256 hotBpsVal, uint256 reportFee, uint256 maxHistLen, bool paused)',
         'function platformPaused() view returns (bool)',
       ];
+
+      let provider = null;
+      let signer = null;
+      let contract = null;
+      let demoMode = true;
+      let refreshTimer = null;
+      const CONTRACT_STORAGE_KEY = 'starburstai_therminos_contract';
+      const REFRESH_INTERVAL_MS = 25000;
+
+      function showMessage(text, type) {
+        messageBoxEl.innerHTML = '<div class="message ' + (type || 'info') + '">' + text + '</div>';
+      }
+      function clearMessage() {
+        messageBoxEl.innerHTML = '';
+      }
+
+      function hashToShortHex(h) {
+        if (!h) return '—';
+        const hex = typeof h === 'string' ? h : (h.hex || (h.length === 32 ? '0x' + Array.from(h).map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('') : ''));
+        const label = SYMBOL_LABELS[hex];
+        return label || hex.slice(0, 10) + '…';
+      }
+
+      var SYMBOL_LABELS = {};
+      function tryLoadSymbolLabels() {
+        try {
+          var s = localStorage.getItem('starburstai_symbol_map');
+          if (s) SYMBOL_LABELS = JSON.parse(s);
+        } catch (e) {}
+      }
+      tryLoadSymbolLabels();
+
+      function formatPriceE8(p) {
+        if (p == null || p === undefined) return '—';
+        const n = Number(p);
+        if (isNaN(n)) return '—';
+        if (n === 0) return '0';
+        var v = n / E8;
+        if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';
+        if (v >= 1e3) return (v / 1e3).toFixed(2) + 'K';
+        return v.toLocaleString(undefined, { maximumFractionDigits: 4 });
+      }
+
+      function formatVolBps(volE8) {
+        if (volE8 == null || volE8 === undefined) return '—';
+        const v = Number(volE8);
+        if (isNaN(v)) return '—';
+        const bps = Math.round((v * BPS) / E8);
+        return bps + ' bps';
+      }
+
+      function getBandClass(band) {
+        const b = Number(band);
+        if (b >= 0 && b < BAND_NAMES.length) return BAND_NAMES[b];
+        return 'cold';
+      }
+
+      function renderHeatTable(symbolHashes, bands, volatilitiesE8, pricesE8) {
+        if (!symbolHashes || symbolHashes.length === 0) {
+          heatTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">No thermometers.</td></tr>';
+          return;
+        }
+        let html = '';
+        for (let i = 0; i < symbolHashes.length; i++) {
+          const band = Number(bands[i] ?? 0);
+          const bandClass = getBandClass(band);
+          const vol = volatilitiesE8[i] != null ? formatVolBps(volatilitiesE8[i]) : '—';
+          const price = pricesE8[i] != null ? formatPriceE8(pricesE8[i]) : '—';
+          const sym = hashToShortHex(symbolHashes[i]);
+          const bandLabel = (BAND_NAMES[band] !== undefined) ? BAND_NAMES[band] : ('Band ' + band);
+          html += '<tr><td class="mono">' + sym + '</td><td><span class="band-badge ' + bandClass + '">' + bandLabel + '</span></td><td class="mono">' + vol + '</td><td class="mono">' + price + '</td></tr>';
+        }
+        heatTableBody.innerHTML = html;
+      }
+
+      function renderRiskScore(bands) {
+        if (!bands || bands.length === 0) {
+          riskValueEl.textContent = '—';
+          return;
+        }
+        let sum = 0;
+        for (let i = 0; i < bands.length; i++) {
+          const b = Number(bands[i]);
+          sum += (b >= 0 && b < BAND_WEIGHTS.length) ? BAND_WEIGHTS[b] : 100;
+        }
+        const score = Math.round(sum / bands.length);

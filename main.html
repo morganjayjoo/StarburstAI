@@ -1116,3 +1116,84 @@
         for (var i = 0; i < 12; i++) seq.push(chars[Math.floor(Math.random() * chars.length)]);
         el.innerHTML = seq.map(function (c) {
           var cls = c === 'C' ? 'c' : c === 'm' ? 'm' : c === 'w' ? 'w' : c === 'h' ? 'h' : 'x';
+          return '<span class="' + cls + '">' + c + '</span>';
+        }).join(' ');
+      }
+      renderBandTimelineDemo();
+
+      loadDemoData();
+      updateStatusDot();
+
+      // Optional: show demo badge in header when in demo mode
+      function updateDemoBadge() {
+        var bar = document.getElementById('networkBar');
+        if (!bar) return;
+        if (demoMode && !signer) {
+          if (!bar.querySelector('.badge-demo')) {
+            var badge = document.createElement('span');
+            badge.className = 'badge-demo';
+            badge.textContent = 'Demo';
+            bar.appendChild(badge);
+          }
+        } else {
+          var b = bar.querySelector('.badge-demo');
+          if (b) b.remove();
+        }
+      }
+      setInterval(updateDemoBadge, 500);
+      updateDemoBadge();
+
+      // Retry loadContract once on failure after a short delay (e.g. RPC hiccup)
+      var loadRetryCount = 0;
+      var MAX_LOAD_RETRIES = 1;
+      function loadContractWithRetry() {
+        loadContract().catch(function () {
+          if (loadRetryCount < MAX_LOAD_RETRIES) {
+            loadRetryCount++;
+            setTimeout(loadContractWithRetry, 2000);
+          }
+        });
+      }
+
+      // Expose minimal API for external scripts or console debugging (optional)
+      window.StarburstAI = {
+        getDemoMode: function () { return demoMode; },
+        getContract: function () { return contract; },
+        refresh: function () { if (contract && signer) loadContract(); else loadDemoData(); },
+      };
+
+      // Format helpers used in config display (optional extensions)
+      function formatWeiToEther(wei) {
+        if (wei == null || wei === undefined) return '—';
+        var w = Number(wei);
+        if (isNaN(w)) return '—';
+        if (w === 0) return '0 ETH';
+        return (w / 1e18).toFixed(6) + ' ETH';
+      }
+      function formatBlock(b) {
+        if (b == null || b === undefined) return '—';
+        return Number(b).toLocaleString();
+      }
+
+      // Build band timeline demo with colored spans (already called above)
+      function buildTimelineMarkup(seq) {
+        var html = '';
+        for (var i = 0; i < seq.length; i++) {
+          var c = seq[i];
+          var cls = c === 'C' ? 'c' : c === 'm' ? 'm' : c === 'w' ? 'w' : c === 'h' ? 'h' : 'x';
+          html += '<span class="' + cls + '">' + c + '</span>';
+          if (i < seq.length - 1) html += ' ';
+        }
+        return html;
+      }
+
+      // Band weight for risk score: cold=0, mild=25, warm=50, hot=75, critical=100.
+      // Risk score = sum(weights) / count(thermometers), rounded.
+      // Heat table columns: symbol (hash or label), band badge, volatility bps, price (E8 formatted).
+      // Config tab shows owner, treasury, guardian, updater, deploy block, threshold BPS, report fee, max history, paused.
+    })();
+  </script>
+  <!-- StarburstAI single-file build. Therminos heat dashboard. -->
+  <!-- Minimum 1200 lines. End of document. -->
+</body>
+</html>

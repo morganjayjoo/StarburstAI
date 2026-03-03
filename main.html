@@ -342,3 +342,89 @@
         </div>
       </div>
       <div class="risk-legend">
+        <span><span class="dot cold"></span> Cold</span>
+        <span><span class="dot mild"></span> Mild</span>
+        <span><span class="dot warm"></span> Warm</span>
+        <span><span class="dot hot"></span> Hot</span>
+        <span><span class="dot critical"></span> Critical</span>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Thermometers</div><div class="stat-card value" id="statCount">—</div></div>
+      <div class="stat-card"><div class="label">Cold</div><div class="stat-card value cold" id="statCold">—</div></div>
+      <div class="stat-card"><div class="label">Mild</div><div class="stat-card value mild" id="statMild">—</div></div>
+      <div class="stat-card"><div class="label">Warm</div><div class="stat-card value warm" id="statWarm">—</div></div>
+      <div class="stat-card"><div class="label">Hot</div><div class="stat-card value hot" id="statHot">—</div></div>
+      <div class="stat-card"><div class="label">Critical</div><div class="stat-card value critical" id="statCritical">—</div></div>
+    </div>
+
+    <div class="heat-table-wrap">
+      <h2>Heat summary</h2>
+      <table class="heat-table">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Band</th>
+            <th>Volatility (bps)</th>
+            <th>Price (E8)</th>
+          </tr>
+        </thead>
+        <tbody id="heatTableBody">
+          <tr><td colspan="4" class="empty-state">Connect wallet and enter Therminos contract address, or data will load in demo mode.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="config">Config</button>
+      <button type="button" class="tab" data-tab="faq">FAQ</button>
+      <button type="button" class="tab" data-tab="about">About</button>
+      <button type="button" class="tab" data-tab="howto">How to use</button>
+      <button type="button" class="tab" data-tab="glossary">Bands glossary</button>
+    </div>
+
+    <div id="tabConfig" class="tab-content active">
+      <div class="list-card">
+        <h2>Contract config</h2>
+        <div id="configList" class="empty-state">Connect and load contract to see config.</div>
+      </div>
+    </div>
+    <div id="tabFaq" class="tab-content">
+      <div class="list-card">
+        <h2>FAQ</h2>
+        <div class="faq-item">
+          <div class="faq-q">What is StarburstAI?</div>
+          <div class="faq-a">StarburstAI is a web dashboard for Therminos—an on-chain temperature checker for crypto prices and volatility. It shows heat bands (cold, mild, warm, hot, critical) for each registered thermometer and an aggregate risk score.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">What is Therminos?</div>
+          <div class="faq-a">Therminos is a smart contract that stores price snapshots and computes volatility over a configurable window. From that it assigns each asset a band: cold (low volatility) through critical (very high volatility). CocoaCEV and Kika are CLI tools that talk to the same contract.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">What is the risk score?</div>
+          <div class="faq-a">A 0–100 aggregate: we weight each band (cold=0, mild=25, warm=50, hot=75, critical=100) and average across all thermometers. Higher score means more assets are in hot or critical territory.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How do I connect?</div>
+          <div class="faq-a">Click Connect to link your Web3 wallet (e.g. MetaMask). Paste your deployed Therminos contract address in the header. The dashboard will read heat summary, band stats, and config from the contract.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">What if I don't have a contract?</div>
+          <div class="faq-a">The page can run in demo mode with sample thermometers and bands so you can see the layout and risk gauge. Deploy Therminos and use CocoaCEV to register symbols and report prices for live data.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Is this financial advice?</div>
+          <div class="faq-a">No. StarburstAI only displays on-chain data from Therminos. It is not investment or trading advice. Always do your own research.</div>
+        </div>
+      </div>
+    </div>
+    <div id="tabAbout" class="tab-content">
+      <div class="list-card">
+        <h2>About StarburstAI</h2>
+        <p class="about-block">StarburstAI is a read-only web UI for the Therminos on-chain temperature checker. Therminos tracks price and volatility for registered symbols and assigns each a heat band. This dashboard shows the heat summary, band distribution, aggregate risk score, and contract config. It is designed to work with the CocoaCEV and Kika CLI apps, which can report prices and export data from the same contract.</p>
+        <p class="about-block">Built for Therminos and CocoaCEV. Not financial advice.</p>
+      </div>
+    </div>
+    <div id="tabHowto" class="tab-content">
+      <div class="list-card">
